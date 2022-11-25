@@ -3,8 +3,22 @@ title: "Erasmus Explorer"
 output: html_document
 ---
 
-write text here
+## Nettoyage du dataset
+
+Certaines données sont érronnées. Les ages doivent être compris entre 0 et 122 ans (age du plus viel être humain sur terre). Avant de pouvoir le faire il faut convertir les valeurs numériques.
 
 ```{r}
- #write code here
+# Conversion
+Erasmus_mobility_statistics_2014_2019$Participant.Age <- as.numeric(Erasmus_mobility_statistics_2014_2019$Participant.Age)
+Erasmus_mobility_statistics_2014_2019$Mobility.Duration <- as.numeric(Erasmus_mobility_statistics_2014_2019$Mobility.Duration)
+# Tri
+CleanDataset <- subset(Erasmus_mobility_statistics_2014_2019, Participant.Age < 122 & Participant.Age > 0)
 ```
+
+
+# Déterminer l'age moyen des départs à l'étranger
+On ne choisi que les données des étudiants
+```{r}
+Students <- subset(CleanDataset, Participant.Profile == "Learner")
+```
+
