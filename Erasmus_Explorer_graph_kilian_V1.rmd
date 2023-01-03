@@ -1,0 +1,96 @@
+---
+title: "Erasmus Explorer"
+output: html_document
+---
+
+write text here
+
+```{r}
+library(tidyverse)
+df <- read.csv('Dataset_Erasmus.csv',header = TRUE,  sep = ";")
+```
+A bar chart showing the number of participants by academic year:
+```{r}
+# Create the bar chart
+df %>%
+  group_by(Academic.Year) %>%
+  summarize(participants = sum(Participants)) %>%
+  ggplot(aes(x = Academic.Year, y = participants)) +
+  geom_col()
+```
+A pie chart showing the distribution of participants by field of education:
+```{r}
+df %>%
+  group_by(Field.of.Education) %>%
+  summarize(Participants = sum(Participants)) %>%
+  ggplot(aes(x = "", y = Participants, fill = Field.of.Education)) +
+  geom_bar(stat = "identity") +
+  coord_polar(theta = "y")
+```
+A bar chart showing the distribution of participants by nationality:
+```{r}
+df %>%
+  group_by(Participant.Nationality) %>%
+  summarize(Participants = sum(Participants)) %>%
+  ggplot(aes(x = Participant.Nationality, y = Participants, color = Participant.Nationality)) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = -50, hjust = 0.25)) +
+  guides(color = FALSE)
+```
+A line chart showing the trend of mobility duration over time:
+```{r}
+df %>%
+  ggplot(aes(x = Mobility.Start.Month, y = Mobility.Duration)) +
+  geom_line()
+```
+A bar chart showing the number of participants by activity type:
+```{r}
+df %>%
+  group_by(Activity..mob.) %>%
+  summarize(Participants = sum(Participants)) %>%
+  ggplot(aes(x = Activity..mob., y = Participants)) +
+  geom_col()
+```
+pie chart showing the distribution of participants by education level:
+```{r}
+df %>%
+  group_by(Education.Level) %>%
+  summarize(Participants = sum(Participants)) %>%
+  ggplot(aes(x = "", y = Participants, fill = Education.Level)) +
+  geom_bar(stat = "identity") +
+  coord_polar(theta = "y")
+```
+A bar chart showing the number of participants by sending country:
+```{r}
+df %>%
+  group_by(Sending.Country.Code) %>%
+  summarize(Participants = sum(Participants)) %>%
+  ggplot(aes(x = Sending.Country.Code, y = Participants)) +
+  geom_col()
+```
+A pie chart showing the distribution of participants by gender:
+```{r}
+df %>%
+  group_by(Participant.Gender) %>%
+  summarize(Participants = sum(Participants)) %>%
+  ggplot(aes(x = "", y = Participants, fill = Participant.Gender)) +
+  geom_bar(stat = "identity") +
+  coord_polar(theta = "y")
+```
+A bar chart showing the number of participants by receiving city:
+```{r}
+df %>%
+  group_by(Receiving.City) %>%
+  summarize(Participants = sum(Participants)) %>%
+  ggplot(aes(x = Receiving.City, y = Participants)) +
+  geom_col()
+```
+A bar chart showing the number of participants by receiving city:
+```{r}
+df %>%
+  group_by(Receiving.Country.Code) %>%
+  summarize(Participants = sum(Participants)) %>%
+  ggplot(aes(x = Receiving.Country.Code, y = Participants)) +
+  geom_col()
+```
+
