@@ -1,24 +1,39 @@
 ---
 title: "Erasmus Explorer"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 write text here
 
 ```{r}
 library(tidyverse)
-df <- read.csv('Dataset_Erasmus.csv',header = TRUE,  sep = ";")
+Erasmus_mobility_statistics_2014_2019 <- read.csv('Dataset_Erasmus.csv',header = TRUE,  sep = ";")
 ```
 
-A bar chart showing the distribution of participants by nationality:
+## Nettoyage du dataset
+
+Certaines données sont érronnées. Les ages doivent être compris entre 0 et 122 ans (age du plus viel être humain sur terre). Avant de pouvoir le faire il faut convertir les valeurs numériques.
+
+```{r}
+# Conversion
+Erasmus_mobility_statistics_2014_2019$Participant.Age <- as.numeric(Erasmus_mobility_statistics_2014_2019$Participant.Age)
+Erasmus_mobility_statistics_2014_2019$Mobility.Duration <- as.numeric(Erasmus_mobility_statistics_2014_2019$Mobility.Duration)
+# Tri
+df <- subset(Erasmus_mobility_statistics_2014_2019, Participant.Age < 122 & Participant.Age > 0)
+```
+
+A bar chart showing the distribution of participants by age:
 ```{r}
 df %>%
-  group_by(Participant.Nationality) %>%
+  group_by(Participant.Age) %>% subset(Participant.Age < 30 & Participant.Age >= 12) %>%
   summarize(Participants = sum(Participants)) %>%
-  ggplot(aes(x = Participant.Nationality, y = Participants, color = Participant.Nationality)) +
-  geom_col() +
-  theme(axis.text.x = element_text(angle = -50, hjust = 0.25)) +
-  guides(color = FALSE)
+  ggplot(aes(x = Participant.Age, y = Participants, fill = Participants)) +
+  geom_col()  + coord_polar() + scale_fill_gradient()+
+  theme(axis.text.x = element_text(angle = -50, hjust = 0.25)) + 
+  labs( x = "Age des participants", y = "nombre de participants") +
+  guides(fill = guide_legend(title = "nombre de participants"))
 ```
 A line chart showing the trend of mobility duration over time:
 ```{r}
@@ -26,7 +41,8 @@ df %>%
   group_by(Academic.Year) %>% summarize(mean_duration = mean(Mobility.Duration)) %>%
   ggplot(aes(x = Academic.Year, y = mean_duration)) +
   geom_col()+
-  coord_flip()
+  coord_flip() + 
+  labs( y = "Durée moyenne de l'erasmus ( mois )", x = "année académique")
 ```
 A pie chart showing the distribution of participants by gender:
 ```{r}
@@ -35,17 +51,28 @@ df %>%
   summarize(Participants = sum(Participants)) %>%
   ggplot(aes(x = "", y = Participants, fill = Participant.Gender)) +
   geom_bar(stat = "identity") +
-  coord_polar(theta = "y")
+  scale_y_continuous() +
+  coord_polar(theta = "y") + 
+  labs( y = "Nombre de participants", x = "") +
+  guides(fill = guide_legend(title = "sexe du participant"))
+
 ```
 
 A bar chart showing the number of participants by receiving city:
 ```{r}
-df %>%
+data_top10_receiver<- df %>%
   group_by(Receiving.Country.Code) %>%
-  summarize(Participants = sum(Participants)) %>%
-  ggplot(aes(x = Receiving.Country.Code, y = Participants, color = Receiving.Country.Code)) +
-  geom_col() +
-  guides(color = FALSE)
+  summarize(Participant_tot = sum(Participants)) %>%
+  top_n(10, Participant_tot)
+data_top10_receiver <- data_top10_receiver[order(data_top10_receiver$Participant_tot , decreasing = TRUE), ]
+data_top10_receiver$Receiving.Country.Code <- factor(data_top10_receiver$Receiving.Country.Code, levels = data_top10_receiver$Receiving.Country.Code)
+data_top10_receiver %>%
+  ggplot(aes(x = "", y = Participant_tot, fill= Receiving.Country.Code)) +
+  geom_bar(stat = "identity") +
+  coord_polar("y") + 
+  guides(color = FALSE) + 
+  labs( y = "Nombre de participants", x = "") + 
+  guides(fill = guide_legend(title = "pays d'accueil"))
 ```
 line chart that show the evolution of participant sent by each country
 ```{r}
@@ -65,20 +92,22 @@ df_top10_all %>%
   group_by(Academic.Year,Sending.Country.Code) %>% 
   summarize(Participants = sum(Participants)) %>%
   ggplot(aes(x = Academic.Year, y = Participants, color = Sending.Country.Code)) +
-  geom_line(aes(group = Sending.Country.Code))
+  geom_line(aes(group = Sending.Country.Code)) +
+  labs( y = "Nombre de participants", x = "année Académique") +
+  guides(color = guide_legend(title = "pays de départ"))
 
 
 ```
 
 Nombre de participant envoyé par nations (top 10)
 ```{r}
-data_test <- df %>%
+data_top10_sender<- df %>%
   group_by(Sending.Country.Code) %>%
   summarize(Participant_tot = sum(Participants)) %>%
   top_n(10, Participant_tot)
-data_test <- data_test[order(data_test$Participant_tot , decreasing = TRUE), ]
-data_test$Sending.Country.Code <- factor(data_test$Sending.Country.Code, levels = data_test$Sending.Country.Code)
-data_test %>%
+data_top10_sender <- data_top10_sender[order(data_top10_sender$Participant_tot , decreasing = TRUE), ]
+data_top10_sender$Sending.Country.Code <- factor(data_top10_sender$Sending.Country.Code, levels = data_top10_sender$Sending.Country.Code)
+data_top10_sender %>%
   ggplot(aes(x=Sending.Country.Code, y=Participant_tot))+
   geom_point(size=3) + 
   geom_segment(aes(x=Sending.Country.Code, 
