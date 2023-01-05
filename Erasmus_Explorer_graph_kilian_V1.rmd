@@ -9,24 +9,7 @@ write text here
 library(tidyverse)
 df <- read.csv('Dataset_Erasmus.csv',header = TRUE,  sep = ";")
 ```
-A bar chart showing the number of participants by academic year:
-```{r}
-# Create the bar chart
-df %>%
-  group_by(Academic.Year) %>%
-  summarize(participants = sum(Participants)) %>%
-  ggplot(aes(x = Academic.Year, y = participants)) +
-  geom_col()
-```
-A pie chart showing the distribution of participants by field of education:
-```{r}
-df %>%
-  group_by(Field.of.Education) %>%
-  summarize(Participants = sum(Participants)) %>%
-  ggplot(aes(x = "", y = Participants, fill = Field.of.Education)) +
-  geom_bar(stat = "identity") +
-  coord_polar(theta = "y")
-```
+
 A bar chart showing the distribution of participants by nationality:
 ```{r}
 df %>%
@@ -40,33 +23,10 @@ df %>%
 A line chart showing the trend of mobility duration over time:
 ```{r}
 df %>%
-  ggplot(aes(x = Mobility.Start.Month, y = Mobility.Duration)) +
-  geom_line()
-```
-A bar chart showing the number of participants by activity type:
-```{r}
-df %>%
-  group_by(Activity..mob.) %>%
-  summarize(Participants = sum(Participants)) %>%
-  ggplot(aes(x = Activity..mob., y = Participants)) +
-  geom_col()
-```
-pie chart showing the distribution of participants by education level:
-```{r}
-df %>%
-  group_by(Education.Level) %>%
-  summarize(Participants = sum(Participants)) %>%
-  ggplot(aes(x = "", y = Participants, fill = Education.Level)) +
-  geom_bar(stat = "identity") +
-  coord_polar(theta = "y")
-```
-A bar chart showing the number of participants by sending country:
-```{r}
-df %>%
-  group_by(Sending.Country.Code) %>%
-  summarize(Participants = sum(Participants)) %>%
-  ggplot(aes(x = Sending.Country.Code, y = Participants)) +
-  geom_col()
+  group_by(Academic.Year) %>% summarize(mean_duration = mean(Mobility.Duration)) %>%
+  ggplot(aes(x = Academic.Year, y = mean_duration)) +
+  geom_col()+
+  coord_flip()
 ```
 A pie chart showing the distribution of participants by gender:
 ```{r}
@@ -77,20 +37,53 @@ df %>%
   geom_bar(stat = "identity") +
   coord_polar(theta = "y")
 ```
-A bar chart showing the number of participants by receiving city:
-```{r}
-df %>%
-  group_by(Receiving.City) %>%
-  summarize(Participants = sum(Participants)) %>%
-  ggplot(aes(x = Receiving.City, y = Participants)) +
-  geom_col()
-```
+
 A bar chart showing the number of participants by receiving city:
 ```{r}
 df %>%
   group_by(Receiving.Country.Code) %>%
   summarize(Participants = sum(Participants)) %>%
-  ggplot(aes(x = Receiving.Country.Code, y = Participants)) +
-  geom_col()
+  ggplot(aes(x = Receiving.Country.Code, y = Participants, color = Receiving.Country.Code)) +
+  geom_col() +
+  guides(color = FALSE)
+```
+line chart that show the evolution of participant sent by each country
+```{r}
+# Select the top 10 nationalities
+df_top10 <- df %>%
+  group_by(Sending.Country.Code) %>%
+  summarize(Participant_tot = sum(Participants)) %>%
+  top_n(10, Participant_tot)
+
+# Create a dataset containing only the top 10 nationalities
+df_top10_all <- df %>%
+  select(everything()) %>%
+  inner_join(df_top10, by = "Sending.Country.Code")
+
+# Create the line chart
+df_top10_all %>%
+  group_by(Academic.Year,Sending.Country.Code) %>% 
+  summarize(Participants = sum(Participants)) %>%
+  ggplot(aes(x = Academic.Year, y = Participants, color = Sending.Country.Code)) +
+  geom_line(aes(group = Sending.Country.Code))
+
+
+```
+
+Nombre de participant envoyé par nations (top 10)
+```{r}
+data_test <- df %>%
+  group_by(Sending.Country.Code) %>%
+  summarize(Participant_tot = sum(Participants)) %>%
+  top_n(10, Participant_tot)
+data_test <- data_test[order(data_test$Participant_tot , decreasing = TRUE), ]
+data_test$Sending.Country.Code <- factor(data_test$Sending.Country.Code, levels = data_test$Sending.Country.Code)
+data_test %>%
+  ggplot(aes(x=Sending.Country.Code, y=Participant_tot))+
+  geom_point(size=3) + 
+  geom_segment(aes(x=Sending.Country.Code, 
+                   xend=Sending.Country.Code, 
+                   y=0, 
+                   yend=Participant_tot))
 ```
 
